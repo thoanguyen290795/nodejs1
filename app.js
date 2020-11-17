@@ -6,27 +6,9 @@ var logger = require('morgan');
 var expressLayouts = require('express-ejs-layouts');
 const mongoose = require('mongoose');
 const { MongoClient } = require("mongodb");
-
 const db = mongoose.connection;
 
-const uri = "mongodb+srv://thanhthoa:Alice2907%40@nodjesapi.hq6qd.mongodb.net/NodjesAPI?retryWrites=true&w=majority";
-// const client = new MongoClient(uri, { useNewUrlParser: true },  { useUnifiedTopology: true });
-//  client.connect(async (err) => {
-//  const collection = await client.db("NodjesAPI").collection("items");
-//  if(!err){
-//    console.log("success connected");
-//  }
-//   client.close();
-// });
-MongoClient.connect(uri, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-})
-.then(() => {
-  console.log("MongoDB Connected")
-})
-.catch(err => console.log(err)); 
-
+mongoose.connect("mongodb+srv://thanhthoa:Alice2907%40@nodjesapi.hq6qd.mongodb.net/nodejs_training?retryWrites=true&w=majority", {useNewUrlParser: true, useUnifiedTopology: true}); 
 
 
 

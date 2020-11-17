@@ -1,0 +1,8 @@
+<% filterStatusHelper =  (statusFilter) => { %>
+    <% statusFilter.forEach((item, index)=> { %>
+        <a class= "btn m-b-sm btn-<%=item.class%> btn-sm" href= "<%= systemConfig.prefixAdmin %>/items/<%=item.value%>" >
+            <%= item.name.toUpperCase()%> ( <%= item.count%> )
+        </a>
+   <% }) %>
+
+<%} %>
