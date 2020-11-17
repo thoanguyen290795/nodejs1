@@ -1,5 +1,6 @@
 var express = require('express');
 var router = express.Router();
+let systemConfig = require('./../../config/system');
 const UtilsHelpers = require("./../../helper/utils/utils"); 
 /* GET users listing. */
 const ItemsModel = require("./../../schemas/items"); 
@@ -38,8 +39,6 @@ router.get('(/:status)?', async (req, res, next)  => {
      
       console.log(objStatusFilter); 
 
-
-
       await ItemsModel.find(objStatusFilter)
       .then(async (items)=>{
        await res.render('pages/items/list', { title: 'Items Management List', 
@@ -52,6 +51,22 @@ router.get('(/:status)?', async (req, res, next)  => {
         console.log(error);
       }); 
   });
+
+//change status 
+router.get('/change-status/:id/:status', async (req, res, next) => { 
+  let currentStatus = await UtilsHelpers.getParams(req.params, req.params.status,"status", "active"); 
+  let currentID = await UtilsHelpers.getParams(req.params, req.params.id,"id", ""); 
+  currentStatus = await  currentStatus === "active"? "inactive": "active"; 
+  await  ItemsModel.findByIdAndUpdate(currentID, {"status": currentStatus}, {new: true})
+.then((result)=>{
+  result.save(); 
+  res.redirect(`/${systemConfig.prefixAdmin}/items`);
+})
+.catch((error)=>{
+  console.log(error);
+}); 
+ 
+});
 
 
   router.get('/form', function(req, res, next) {
