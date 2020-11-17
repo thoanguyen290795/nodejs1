@@ -36,8 +36,7 @@ router.get('(/:status)?', async (req, res, next)  => {
       }
 
       objStatusFilter = await getObjectStatusFilter(); 
-     
-      console.log(objStatusFilter); 
+
 
       await ItemsModel.find(objStatusFilter)
       .then(async (items)=>{
@@ -66,6 +65,57 @@ router.get('/change-status/:id/:status', async (req, res, next) => {
   console.log(error);
 }); 
  
+});
+//change multiple status 
+router.post('/change-status/:status', async (req, res, next) => { 
+  let currentStatus = await UtilsHelpers.getParams(req.params, req.params.status,"status", "active"); 
+  let idArray = await req.body.cid; 
+  await ItemsModel.updateMany({_id: {$in: idArray}}, {"status": currentStatus})
+  .then((result)=>{
+    res.redirect(`/${systemConfig.prefixAdmin}/items`);
+  })
+  .catch((error)=>{
+    console.log(error);
+  }); 
+});
+
+router.get('/delete/:id/', async (req, res, next) =>{
+  let currentID = req.params.id; 
+  await ItemsModel.deleteOne({_id: currentID})
+  .then((result)=>{
+    res.redirect(`/${systemConfig.prefixAdmin}/items`);
+  })
+  .catch((error)=>{
+    console.log(error);
+  })
+}); 
+
+router.post('/delete', async (req, res, next) => { 
+  let idArray = await req.body.cid; 
+   console.log(idArray)
+  await ItemsModel.deleteMany({_id: {$in: idArray}})
+  .then((result)=>{
+    res.redirect(`/${systemConfig.prefixAdmin}/items`);
+  })
+  .catch((error)=>{
+    console.log(error);
+  }); 
+});
+
+
+router.post('/change-ordering', async (req, res, next) => {
+let idArray = await req.body.cid; 
+let ordering =  await req.body.ordering; 
+if(Array.isArray(idArray)){
+  idArray.forEach(async (item, index)=>{
+    await ItemsModel.findByIdAndUpdate(item, {"ordering": parseInt(ordering[index])}, {new: true})
+  }) 
+} else {
+  await  ItemsModel.findByIdAndUpdate(idArray, {"ordering": parseInt(ordering)}, {new: true})
+}
+  res.redirect(`/${systemConfig.prefixAdmin}/items`); 
+
+
 });
 
 

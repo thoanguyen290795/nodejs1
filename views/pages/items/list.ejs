@@ -19,7 +19,7 @@
                             <div class="row">
                                 <div class="status-list col-sm-6 pl0">
                                     <% include ./../../helper/statusFilter %>
-                                    <% filterStatusHelper(statusFilter)%>    
+                                    <% filterStatusHelper("items", statusFilter)%>    
                                 </div>
                                 <div class="col-sm-6">
                                     <form action="<%= systemConfig.prefixAdmin%>/items/<%=currentStatus%>" method="GET">
@@ -55,16 +55,16 @@
                                 <div class="zcontrols">
                                     <select name="action" class="form-control slbAction">
                                         <option value="">Bulk Action</option>
-                                        <option value="admin123/item/change-status/active">
+                                        <option value="<%= systemConfig.prefixAdmin%>/items/change-status/active">
                                             Active
                                         </option>
-                                        <option value="admin123/item/change-status/inactive">
+                                        <option value="<%= systemConfig.prefixAdmin %>/items/change-status/inactive">
                                             InActive
                                         </option>
-                                        <option value="admin123/item/save-ordering/">
+                                        <option value="<%= systemConfig.prefixAdmin %>/items/change-ordering/">
                                             Change Ordering
                                         </option>
-                                        <option value="admin123/item/delete/">
+                                        <option value="<%= systemConfig.prefixAdmin %>/items/delete/">
                                             Delete
                                         </option>
                                     </select>
@@ -74,7 +74,8 @@
                                         </a>
                                     </div>
                                 </div>
-    
+                                <!-- <% include ./../../helper/action %>
+                                <% actionHelper()%>   -->
                                 <div class="table-responsive">
                                     <table class="table table-striped">
                                         <thead>
@@ -107,11 +108,11 @@
                                                         <% statusHelper("items",item)%>
                                                     </td>
                                                     <td>
-                                                        <input type="number" value= <%= item.ordering%> class="text-center ordering">
+                                                        <input type="number" value= <%= item.ordering %> class="text-center ordering">
                                                     </td>
                                                     <td>
                                                         <a href="admin123/item/form/5a9e5a96da67bc078421d7d6" type="button" class="btn btn-warning btn-sm">Edit</a>
-                                                        <a href="admin123/item/delete/5a9e5a96da67bc078421d7d6" type="button" class="btn btn-danger btn-sm btn-delete">Delete</a>
+                                                        <a href="<%= systemConfig.prefixAdmin %>/items/delete/<%= item.id%>" type="button" class="btn btn-danger btn-sm btn-delete">Delete</a>
                                                     </td>
                                                 </tr>
                                            <% }) %>

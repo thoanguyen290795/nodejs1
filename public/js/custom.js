@@ -99,7 +99,6 @@ $(document).ready(function () {
             } else {
                 var flag = false;
                 var str = $(slb_selector + " option:selected").attr('data-comfirm');
-               
                 if (str != undefined) {
 
                     //Kiểm tra giá trị trả về khi user nhấn nút trên popup
