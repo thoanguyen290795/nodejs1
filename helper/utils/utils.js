@@ -1,6 +1,6 @@
 const ItemsModel = require("./../../schemas/items"); 
 
-let createFilterStatus = (currentStatus) => {
+let createFilterStatus = async (currentStatus) => {
       let statusFilter = [
         {name: "All", value:"all",  count: 3, link: "#", class: "default"}, 
         {name: "Active", value:"active", count: 2, link: "#", class: "default"}, 
@@ -8,7 +8,7 @@ let createFilterStatus = (currentStatus) => {
       ]
         //count active inactive all - status - items => count({})
           let objStatus = {}
-          statusFilter.forEach( async (item, index)=>{
+        await  statusFilter.forEach( async (item, index)=>{
               item.value === "all"? objStatus = {} : objStatus = {"status" : item.value}; 
               item.value === currentStatus ? item["class"]="success": item["class"]= "default"; 
             await  ItemsModel.count(objStatus)
@@ -17,16 +17,36 @@ let createFilterStatus = (currentStatus) => {
             }); 
           });
           return statusFilter
-
 }
+let getObjectStatusFilter =  (keyword, currentStatus) => {
+  let objStatusFilter = {}; 
+   keyword = keyword.trim(); 
+  if(currentStatus === "all"){
+    if(keyword !== "") {
+      objStatusFilter = {"name": new RegExp(keyword, "i")}
+    } else {
+      objStatusFilter = {}
+     }       
+   } else if (currentStatus !== "all" ){
+     if(keyword === "") {
+      objStatusFilter = {"status": currentStatus}
+     } else {
+      objStatusFilter = {"status": currentStatus, "name": new RegExp(keyword, "i")} }          
+   } else {
+    objStatusFilter = {}
+   }
+   return objStatusFilter
+}
+
 let getParams = (params, currentValue,value,defaultValue) => {
   if(params[value] === undefined || params[value] === ""){
-   return  currentValue = defaultValue; 
+   return   currentValue = defaultValue; 
    } else {
     return   currentValue
    }
 }
 module.exports = {
     createFilterStatus,
-    getParams
+    getParams,
+    getObjectStatusFilter
 }
