@@ -2,20 +2,82 @@ var express = require('express');
 var router = express.Router();
 let systemConfig = require('./../../config/system');
 const UtilsHelpers = require("./../../helper/utils/utils"); 
+const ValidateHelpers = require("./../../validates/items"); 
+const { body, validationResult, check } = require('express-validator');
 /* GET users listing. */
 const ItemsModel = require("./../../schemas/items"); 
+const arrayValidationItems  = ValidateHelpers.validator(); 
+
+router.get('/add', async (req, res)  => {
+  const errors = validationResult(req)
+  if (!errors.isEmpty()) {
+    return res.status(422).json({ errors: errors.array() })
+  }
+
+  // await res.render('pages/items/formDemo', { title: 'Items Management - Add'});
+}); 
+
+router.get('/form(/:id)?', async (req, res)  => {
+  let currentId = await UtilsHelpers.getParams(req.params, req.params.id,"id",  "");
+  let itemDefault = {name: "", ordering: 0, status: "novalue"}
+  let errors = []; 
+  if(currentId === "") { //ADD
+    await res.render('pages/items/form', { title: 'Items Management - Add' , item: itemDefault, errors});
+  } else {
+  await  ItemsModel.findById(currentId, async (err, itemEdit)=>{
+    await res.render('pages/items/form', { title: 'Items Management - Edit', item: itemEdit, errors });
+    }) 
+  }
+});
+router.post('/save(/:id)?',arrayValidationItems, async (req, res)  => {
+  let errors = validationResult(req); 
+   errors = Array.from(errors.errors);  
+   let itemDefault = {name: "", ordering: 0, status: "novalue"}; 
+  let itemBody = req.body; 
+  if (itemBody.id === "" || itemBody.id === undefined){
+    if(errors.length > 0){
+      await res.render('pages/items/form', { title: 'Items Management - Add', item: itemDefault, errors });
+      return; 
+    } else {
+      let item = {
+        name: await UtilsHelpers.getParams(req.body, req.body.name,"name",  ""), 
+        status: await UtilsHelpers.getParams(req.body, req.body.status,"status",  "novalue"), 
+        ordering: await UtilsHelpers.getParams(req.body, req.body.ordering,"ordering",  0) 
+      }
+   await new ItemsModel(item).save((error, result)=>{
+    res.redirect(`/${systemConfig.prefixAdmin}/items`);
+    }); 
+  } }
+  else {
+    if(errors.length > 0){
+    
+      console.log("edit có lỗi");
+      await res.render('pages/items/form', { title: 'Items Management - Edit', item: itemBody, errors });
+      return; 
+   
+    } else {
+      console.log("Edit ko lỗi");
+    let item = {
+      name: await UtilsHelpers.getParams(req.body, req.body.name,"name",  ""), 
+      status: await UtilsHelpers.getParams(req.body, req.body.status,"status",  "novalue"), 
+      ordering: await UtilsHelpers.getParams(req.body, req.body.ordering,"ordering",  0) 
+    }
+     await  ItemsModel.updateOne({_id: itemBody.id}, item).then((result)=>{
+      res.redirect(`/${systemConfig.prefixAdmin}/items`);
+     }).catch((error)=>{
+       console.log(error);
+     })
+  };
+   }}
+);
+
+
 
 router.get('(/:status)?', async (req, res, next)  => {
   let objStatusFilter = {}; 
   let currentStatus = await UtilsHelpers.getParams(req.params, req.params.status,"status",  "all");
   let keyword =  await UtilsHelpers.getParams(req.query, req.query.keyword,"keyword",  "");
   let statusFilter = await UtilsHelpers.createFilterStatus(currentStatus); 
-
-      //get all items from database by using find({}); 
-     
-      // await currentStatus === "all" ? objStatusFilter = {} : objStatusFilter = {"status": currentStatus};
-      // await keyword !== "" ?          objStatusFilter = {} : objStatusFilter = {"name": keyword}
-      // await keyword !== "" && currentStatus !== "all" ?  objStatusFilter = {"status": currentStatus, "name": keyword} : objStatusFilter = {}; 
       let getObjectStatusFilter =  () => {
         let objStatusFilter = {}; 
         keyword = keyword.trim(); 
@@ -49,6 +111,7 @@ router.get('(/:status)?', async (req, res, next)  => {
       .catch((error)=>{
         console.log(error);
       }); 
+    
   });
 
 //change status 
@@ -64,7 +127,7 @@ router.get('/change-status/:id/:status', async (req, res, next) => {
 .catch((error)=>{
   console.log(error);
 }); 
- 
+req.flash('ok', 'Everything is A-O-K');
 });
 //change multiple status 
 router.post('/change-status/:status', async (req, res, next) => { 
@@ -92,7 +155,6 @@ router.get('/delete/:id/', async (req, res, next) =>{
 
 router.post('/delete', async (req, res, next) => { 
   let idArray = await req.body.cid; 
-   console.log(idArray)
   await ItemsModel.deleteMany({_id: {$in: idArray}})
   .then((result)=>{
     res.redirect(`/${systemConfig.prefixAdmin}/items`);
@@ -119,9 +181,8 @@ if(Array.isArray(idArray)){
 });
 
 
-  router.get('/form', function(req, res, next) {
-    res.render('pages/items/add', { title: 'Items Add Form' });
-  });
+
+  
   
 
 module.exports = router;
