@@ -10,7 +10,7 @@ const arrayValidationItems  = ValidateHelpers.validator();
 
 router.get('/form(/:id)?', async (req, res)  => {
   let currentId = await UtilsHelpers.getParams(req.params, req.params.id,"id",  "");
-  let itemDefault = {name: "", ordering: 0, status: "novalue"}
+  let itemDefault = {name: "", ordering: 0, status: "novalue" , tags: []}
   let errors = []; 
   if(currentId === "") { //ADD
     await res.render('pages/items/form', { title: 'Items Management - Add' , item: itemDefault, errors});
@@ -23,14 +23,14 @@ router.get('/form(/:id)?', async (req, res)  => {
 router.post('/save(/:id)?',arrayValidationItems, async (req, res)  => {
   let errors = validationResult(req); 
   errors = Array.from(errors.errors);  
-  let itemDefault = {name: "", ordering: 0, status: "novalue"}; 
+  let itemDefault = {name: "", ordering: 0, status: "novalue", tag: []}; 
   let itemBody = req.body; 
- if (itemBody.id === "" || itemBody.id === undefined){
-   if(errors.length > 0){   
+  if (itemBody.id === "" || itemBody.id === undefined){
+    if(errors.length > 0){   
      await res.render('pages/items/form', { title: 'Items Management - Add', item: itemDefault, errors });
      return; 
    } else {
-  await new ItemsModel(item).save((error, result)=>{
+  await new ItemsModel(itemBody).save((error, result)=>{
     setTimeout(()=>{
      res.redirect(`/${systemConfig.prefixAdmin}/items`);
     }, 3000); 
@@ -42,12 +42,15 @@ router.post('/save(/:id)?',arrayValidationItems, async (req, res)  => {
     id : itemBody.id, 
     name:itemBody.name , 
     status: itemBody.status, 
-    ordering: itemBody.ordering
+    ordering: itemBody.ordering, 
+    tags: itemBody.tags
   }
    if(errors.length > 0){  
      await res.render('pages/items/form', { title: 'Items Management - Edit', item: item, errors });
      return; 
    } else {
+    let arrayTags = item["tags"].split(","); 
+    item = {...item, tags: arrayTags}
     await ItemsModel.updateOne({_id: item.id}, item).then( async (result)=>{
      setTimeout( async ()=>{
       await res.redirect(`/${systemConfig.prefixAdmin}/items`);
@@ -55,6 +58,7 @@ router.post('/save(/:id)?',arrayValidationItems, async (req, res)  => {
     });
  };
   }}
+
 );
 
 router.get('(/:status)?', async (req, res, next)  => {

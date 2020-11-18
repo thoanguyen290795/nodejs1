@@ -125,4 +125,30 @@ $(document).ready(function () {
             $(this).parent().css({'display':'none'});
         })    
     }
+
+    console.clear();
+$(function() {
+  $('input').on('change', function(event) {
+    let $element = $(event.target);
+    let $container = $element.closest('.example');
+
+    if (!$element.data('tagsinput'))
+      return;
+    let val = $element.val();
+    if (val === null)
+      val = "null";
+    let items = $element.tagsinput('items');
+    console.log(items);
+
+    console.log(JSON.stringify(items));
+    if(items.length > 0){
+        let tdContent  = ""; 
+        $.map( items, function( val, i ) {
+            tdContent += `<p class="badge badge-secondary mx-2" >${val}</p>`
+});
+    $("#tagsShow").html(tdContent); 
+    }
+ 
+  }).trigger('change');
+});
 });

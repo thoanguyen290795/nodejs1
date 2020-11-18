@@ -40,6 +40,16 @@
                                             <option value="inactive" <%= (item.status == "inactive")? 'selected="selected"': "" %> >Inactive</option>
                                         </select>
                                     </div>
+                                    <div>
+                                        <div class="bs-example mt-5">
+                                            <p>Vui lòng nhập tag</p>
+                                            <input type="text" name="tags" value="<%= item.tags%>" data-role="tagsinput" />
+                                          </div>
+                                          <p>TagName Show</p>
+                                          <p id="tagsShow" class="text-success"><%= item.tags%> </p>
+                                    </div>
+                                       
+               
                                     <!-- <div class="form-group">
                                         <label>Content</label>
                                         <textarea class="form-control" name="content" rows="2"  id="content_ck" ></textarea>
