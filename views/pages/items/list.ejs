@@ -1,4 +1,7 @@
-
+<%
+const collection = "items";
+const linkPrefix  = systemConfig.prefixAdmin + "/" + collection + "/"
+%>
       <div id="page-wrapper">  
         <%include ./../../elements/pageTitle%>
             <div class="row">
@@ -6,7 +9,7 @@
                     <div class="panel panel-info">
                         <div class="panel-heading">
                             Search & Filter
-                            <a href="<%= systemConfig.prefixAdmin%>/items/all">
+                            <a href="<%= linkPrefix%>/all">
                                 <span id="icon-reload" class="glyphicon glyphicon-refresh"></span>
                             </a>
                         </div>
@@ -16,10 +19,10 @@
                             <div class="row">
                                 <div class="status-list col-sm-6 pl0">
                                     <% include ./../../helper/statusFilter %>
-                                    <% filterStatusHelper("items", statusFilter)%>    
+                                    <% filterStatusHelper(collection, statusFilter)%>    
                                 </div>
                                 <div class="col-sm-6">
-                                    <form action="<%= systemConfig.prefixAdmin%>/items/<%=currentStatus%>" method="GET">
+                                    <form action="<%= linkPrefix %><%=currentStatus%>" method="GET">
                                         <div class="input-group">
                                             <input type="text" class="form-control" id="searchQuery" name="keyword" placeholder="Search for..." value=<%=keyword%>>
                                             <input type="hidden" value="all" id="searchQueryHidden">
@@ -28,7 +31,7 @@
                                                 <button class="btn btn-info" type="submit">Search</button>
                                             </span>
                                             <span class="input-group-btn">
-                                                <button class="btn btn-success" type="button"><a href="<%= systemConfig.prefixAdmin%>/items/all">Clear</a></button>
+                                                <button class="btn btn-success" type="button"><a href="<%=linkPrefix%>all">Clear</a></button>
                                             </span>
                                         </div>
                                     </form>
@@ -51,7 +54,7 @@
                             <form role="form" class="form-inline zt-form" id="zt-form" action="" method="post">
                           
                                 <% include ./../../helper/action %>
-                                <%- actionHelper("items")%>  
+                                <%- actionHelper(collection)%>  
                                 <div class="table-responsive">
                                     <table class="table table-striped">
                                         <thead>
@@ -82,7 +85,7 @@
                                                        <%= item.name%>
                                                     </td>
                                                     <td>                                                                            
-                                                        <% statusHelper("items",item)%>
+                                                        <% statusHelper(collection,item)%>
                                                     </td>
                                                     <td>                                                                            
                                                         <% item["tags"].forEach((tag, index)=>{ %>
@@ -94,8 +97,8 @@
                                                         <input type="number" value= <%= item.ordering %> class="text-center ordering">
                                                     </td>
                                                     <td>
-                                                        <a href="<%= systemConfig.prefixAdmin %>/items/form/<%= item.id%>" type="button" class="btn btn-warning btn-sm">Edit</a>
-                                                        <a href="<%= systemConfig.prefixAdmin %>/items/delete/<%= item.id%>" type="button" class="btn btn-danger btn-sm btn-delete">Delete</a>
+                                                        <a href="<%= linkPrefix %>form/<%= item.id%>" type="button" class="btn btn-warning btn-sm">Edit</a>
+                                                        <a href="<%=linkPrefix%>delete/<%= item.id%>" type="button" class="btn btn-danger btn-sm btn-delete">Delete</a>
                                                     </td>
                                                 </tr>
                                            <% }) %>

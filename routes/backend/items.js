@@ -1,66 +1,76 @@
 var express = require('express');
 var router = express.Router();
-let systemConfig = require('./../../config/system');
-const UtilsHelpers = require("./../../helper/utils/utils"); 
-const ValidateHelpers = require("./../../validates/items"); 
+let systemConfig = require(__path_config+ 'system');
+const UtilsHelpers = require(__path_helper + "utils/utils"); 
+const ValidateHelpers = require(__path_validates + "items"); 
+
 const { body, validationResult, check } = require('express-validator');
 /* GET users listing. */
-const ItemsModel = require("./../../schemas/items"); 
+const collection = "items"
+const ItemsModel = require(__path_schemas + collection); 
 const arrayValidationItems  = ValidateHelpers.validator(); 
+const linkIndex = "/" + systemConfig.prefixAdmin + "/"+ collection +"/"; 
+const folderView = "pages/items/"
+
+
 
 router.get('/form(/:id)?', async (req, res)  => {
   let currentId = await UtilsHelpers.getParams(req.params, req.params.id,"id",  "");
-  let itemDefault = {name: "", ordering: 0, status: "novalue" , tags: []}
+  let itemDefault = {name: "", ordering: 0, status: "novalue" , tags: []} //render item rỗng tránh bị error
   let errors = []; 
   if(currentId === "") { //ADD
-    await res.render('pages/items/form', { title: 'Items Management - Add' , item: itemDefault, errors});
+    await res.render(`${folderView}form`, { title: 'Items Management - Add' , item: itemDefault, errors});
   } else {
     await  ItemsModel.findById(currentId, async (err, itemEdit)=>{
-    await res.render('pages/items/form', { title: 'Items Management - Edit', item: itemEdit, errors });
+    await res.render(`${folderView}/form`, { title: 'Items Management - Edit', item: itemEdit, errors });
     }) 
   }
 });
 router.post('/save(/:id)?',arrayValidationItems, async (req, res)  => {
   let errors = validationResult(req); 
   errors = Array.from(errors.errors);  
-  let itemDefault = {name: "", ordering: 0, status: "novalue", tag: []}; 
+  let itemDefault = {name: "", ordering: 0, status: "novalue", tag: []}; // truyền item rỗng ra ngoài tránh bị lổi render 
   let itemBody = req.body; 
   if (itemBody.id === "" || itemBody.id === undefined){
-    if(errors.length > 0){   
-     await res.render('pages/items/form', { title: 'Items Management - Add', item: itemDefault, errors });
+    if(errors.length > 0){   //có lỗi thì return; ko chạy tiếp
+     await res.render(`${folderView}/form`, { title: 'Items Management - Add', item: itemDefault, errors });
      return; 
    } else {
+    let arrayTags = itemBody["tags"].split(","); //bỏ dấu , chuyển items thành 1 array 
+    itemBody = {...itemBody, tags: arrayTags}//ko có lỗi thì update One
   await new ItemsModel(itemBody).save((error, result)=>{
-    setTimeout(()=>{
-     res.redirect(`/${systemConfig.prefixAdmin}/items`);
-    }, 3000); 
+    setTimeout(()=>{ //ko có lỗi thì lưu item trong database, setTimeout tránh bđb
+    //  res.redirect(`/${systemConfig.prefixAdmin}/items`);
+     res.redirect(`${linkIndex}`)
+    }, 2000); 
     return ItemsModel;   
    }); 
 }}
  else { 
-  let item = {
+  let item = { //edit thì có id => tạo ra 1 item mới có chứa id và thông tin vừa nhập 
     id : itemBody.id, 
     name:itemBody.name , 
     status: itemBody.status, 
     ordering: itemBody.ordering, 
     tags: itemBody.tags
   }
-   if(errors.length > 0){  
-     await res.render('pages/items/form', { title: 'Items Management - Edit', item: item, errors });
+   if(errors.length > 0){   //có lỗi thì return; 
+     await res.render(`${folderView}/form`, { title: 'Items Management - Edit', item: item, errors });
      return; 
    } else {
-    let arrayTags = item["tags"].split(","); 
-    item = {...item, tags: arrayTags}
-    await ItemsModel.updateOne({_id: item.id}, item).then( async (result)=>{
+    let arrayTags = item["tags"].split(","); //bỏ dấu , chuyển items thành 1 array 
+    item = {...item, tags: arrayTags}//ko có lỗi thì update One
+    await ItemsModel.updateOne({_id: item.id}, item, {new: true})
+    .then( async (result)=>{ 
      setTimeout( async ()=>{
-      await res.redirect(`/${systemConfig.prefixAdmin}/items`);
-     }, 2000);
+      await res.redirect(`${linkIndex}`);
+     }, 4000);
     });
  };
   }}
 
 );
-
+//get all items, filter items by status, keyword 
 router.get('(/:status)?', async (req, res, next)  => {
   let objStatusFilter = {}; 
   let currentStatus = await UtilsHelpers.getParams(req.params, req.params.status,"status",  "all");
@@ -69,7 +79,7 @@ router.get('(/:status)?', async (req, res, next)  => {
   objStatusFilter = await UtilsHelpers.getObjectStatusFilter(keyword, currentStatus); 
     await ItemsModel.find(objStatusFilter)
       .then(async (items)=>{
-       await res.render('pages/items/list', { title: 'Items Management List', 
+       await res.render(`${folderView}/list`, { title: 'Items Management List', 
                                               items, 
                                               statusFilter,
                                               currentStatus, 
@@ -87,44 +97,46 @@ router.get('/change-status/:id/:status', async (req, res, next) => {
   let currentID = await UtilsHelpers.getParams(req.params, req.params.id,"id", ""); 
   currentStatus = await  currentStatus === "active"? "inactive": "active"; 
   await  ItemsModel.findByIdAndUpdate(currentID, {"status": currentStatus}, {new: true})
-.then((result)=>{
-  result.save(); 
-  res.redirect(`/${systemConfig.prefixAdmin}/items`);
+.then( async (result)=>{ 
+  setTimeout( async ()=>{
+    await res.redirect(`${linkIndex}`);
+   }, 3000);
 })
 .catch((error)=>{
   console.log(error);
 }); 
-req.flash('ok', 'Everything is A-O-K');
 });
 //change multiple status 
 router.post('/change-status/:status', async (req, res, next) => { 
   let currentStatus = await UtilsHelpers.getParams(req.params, req.params.status,"status", "active"); 
   let idArray = await req.body.cid; 
   await ItemsModel.updateMany({_id: {$in: idArray}}, {"status": currentStatus})
-  .then((result)=>{
-    res.redirect(`/${systemConfig.prefixAdmin}/items`);
+  .then( async (result)=>{
+      setTimeout( async ()=>{
+      await res.redirect(`${linkIndex}`);
+     }, 4000);
   })
   .catch((error)=>{
     console.log(error);
   }); 
 });
-
 router.get('/delete/:id/', async (req, res, next) =>{
   let currentID = req.params.id; 
   await ItemsModel.deleteOne({_id: currentID})
-  .then((result)=>{
-    res.redirect(`/${systemConfig.prefixAdmin}/items`);
+  .then(async (result)=>{
+   await res.redirect(`/${systemConfig.prefixAdmin}/items`);
   })
   .catch((error)=>{
     console.log(error);
   })
 }); 
-
 router.post('/delete', async (req, res, next) => { 
   let idArray = await req.body.cid; 
   await ItemsModel.deleteMany({_id: {$in: idArray}})
-  .then((result)=>{
-    res.redirect(`/${systemConfig.prefixAdmin}/items`);
+  .then( async (result)=>{
+    await result.save(); 
+    // res.redirect(`/${systemConfig.prefixAdmin}/items`);
+   await res.redirect(`${linkIndex}`)
   })
   .catch((error)=>{
     console.log(error);
@@ -142,14 +154,8 @@ if(Array.isArray(idArray)){
 } else {
   await  ItemsModel.findByIdAndUpdate(idArray, {"ordering": parseInt(ordering)}, {new: true})
 }
-  res.redirect(`/${systemConfig.prefixAdmin}/items`); 
-
-
-});
-
-
-
-
-  
+  // res.redirect(`/${systemConfig.prefixAdmin}/items`); 
+ await res.redirect(`${linkIndex}`)
+}); 
 
 module.exports = router;
